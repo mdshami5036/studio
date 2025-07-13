@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
@@ -24,7 +25,9 @@ type QrOptions = {
 };
 
 export default function QrGenerator() {
-  const [tab, setTab] = useState('url');
+  const searchParams = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'url';
+  const [tab, setTab] = useState(initialTab);
   const [url, setUrl] = useState('https://firebase.google.com/');
   const [text, setText] = useState('Hello, world!');
   const [tourDetails, setTourDetails] = useState(

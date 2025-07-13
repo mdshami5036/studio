@@ -5,10 +5,20 @@ import jsQR from 'jsqr';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { QrCode, Link as LinkIcon, Text, Loader2, Camera, Zap, ZapOff, RefreshCw, Image as ImageIcon, SlidersHorizontal, Search } from 'lucide-react';
+import { QrCode, Link as LinkIcon, Text, Loader2, Camera, Zap, ZapOff, RefreshCw, Image as ImageIcon, SlidersHorizontal, Search, FileSymlink, User, Mail, MessageSquare, MapPin, Phone, Calendar as CalendarIcon, Clipboard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Slider } from '../ui/slider';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import Link from 'next/link';
+
 
 type FacingMode = 'user' | 'environment';
 
@@ -243,9 +253,40 @@ export default function QrScanner() {
 
                 {/* Top Toolbar */}
                 <div className="absolute top-0 left-0 right-0 flex justify-between p-4 bg-gradient-to-b from-black/50 to-transparent z-20">
-                    <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
-                        <SlidersHorizontal />
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                            <SlidersHorizontal />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuLabel>Create QR</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                         <DropdownMenuItem onSelect={() => navigator.clipboard.readText().then(text => setScanResult(text ? `URL: ${text}`: ''))}>
+                            <Clipboard className="mr-2 h-4 w-4" />
+                            <span>Content from clipboard</span>
+                        </DropdownMenuItem>
+                        <Link href="/generate?tab=url" passHref>
+                          <DropdownMenuItem>
+                            <LinkIcon className="mr-2 h-4 w-4" />
+                            <span>URL</span>
+                          </DropdownMenuItem>
+                        </Link>
+                         <Link href="/generate?tab=text" passHref>
+                          <DropdownMenuItem>
+                            <Text className="mr-2 h-4 w-4" />
+                            <span>Text</span>
+                          </DropdownMenuItem>
+                        </Link>
+                        <Link href="/generate?tab=tour" passHref>
+                          <DropdownMenuItem>
+                            <FileSymlink className="mr-2 h-4 w-4" />
+                            <span>AI Tour</span>
+                          </DropdownMenuItem>
+                        </Link>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
                             <ImageIcon />
