@@ -2,12 +2,15 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import jsQR from 'jsqr';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { Camera, QrCode, Link as LinkIcon, Text, Loader2 } from 'lucide-react';
+import { QrCode, Link as LinkIcon, Text, Loader2, Camera, Zap, ZapOff, RefreshCw, Image as ImageIcon, SlidersHorizontal, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Slider } from '../ui/slider';
+
+type FacingMode = 'user' | 'environment';
 
 export default function QrScanner() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -15,17 +18,35 @@ export default function QrScanner() {
   const [scanResult, setScanResult] = useState<string | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isScanning, setIsScanning] = useState(true);
+  const [isFlashOn, setIsFlashOn] = useState(false);
+  const [facingMode, setFacingMode] = useState<FacingMode>('environment');
+  const [zoom, setZoom] = useState(1);
   const { toast } = useToast();
 
   useEffect(() => {
+    let stream: MediaStream | null = null;
+    let track: MediaStreamTrack | null = null;
+    
     const getCameraPermission = async () => {
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
            throw new Error('Camera not available on this browser');
         }
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => {
+             track = stream!.getVideoTracks()[0];
+             const capabilities = track.getCapabilities();
+             // @ts-ignore
+             if (capabilities.torch) {
+                // Flashlight supported
+             }
+             // @ts-ignore
+             if (capabilities.zoom) {
+                // Zoom supported
+             }
+          }
         }
         setHasCameraPermission(true);
       } catch (error) {
@@ -43,13 +64,13 @@ export default function QrScanner() {
 
     const cleanup = () => {
       if (videoRef.current && videoRef.current.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
-        stream.getTracks().forEach(track => track.stop());
+        const mediaStream = videoRef.current.srcObject as MediaStream;
+        mediaStream.getTracks().forEach(track => track.stop());
       }
     };
 
     return cleanup;
-  }, [toast]);
+  }, [toast, facingMode]);
 
   useEffect(() => {
     let animationFrameId: number;
@@ -93,6 +114,44 @@ export default function QrScanner() {
     setIsScanning(true);
   };
 
+  const toggleFlash = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const track = stream.getVideoTracks()[0];
+      const capabilities = track.getCapabilities();
+      // @ts-ignore
+      if (capabilities.torch) {
+        track.applyConstraints({
+          // @ts-ignore
+          advanced: [{ torch: !isFlashOn }]
+        })
+        .then(() => setIsFlashOn(!isFlashOn))
+        .catch(e => console.error('Failed to toggle flash:', e));
+      } else {
+        toast({ description: "Flash not available on this device."})
+      }
+    }
+  };
+
+  const handleZoomChange = (value: number[]) => {
+    const newZoom = value[0];
+    setZoom(newZoom);
+    if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        const track = stream.getVideoTracks()[0];
+        const capabilities = track.getCapabilities();
+        // @ts-ignore
+        if (capabilities.zoom) {
+            // @ts-ignore
+            track.applyConstraints({ advanced: [{ zoom: newZoom }] });
+        }
+    }
+  }
+
+  const toggleCamera = () => {
+    setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
+  }
+
   const isUrl = (text: string) => {
     try {
       new URL(text);
@@ -101,15 +160,15 @@ export default function QrScanner() {
       return false;
     }
   }
-
+  
   const renderResult = () => {
     if (!scanResult) return null;
 
     const isLink = isUrl(scanResult);
 
     return (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-20">
-            <Card className="w-[90%] max-w-md">
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50 p-4">
+            <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2"><QrCode className="text-primary"/>Scan Result</CardTitle>
                 </CardHeader>
@@ -133,10 +192,10 @@ export default function QrScanner() {
   }
 
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0 bg-black">
         {hasCameraPermission === null && (
-             <div className="w-full h-full flex items-center justify-center bg-black">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+             <div className="w-full h-full flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-white" />
                 <p className="ml-2 text-white">Requesting camera access...</p>
             </div>
         )}
@@ -145,9 +204,10 @@ export default function QrScanner() {
             <video 
                 ref={videoRef} 
                 className={cn(
-                    'w-full h-full object-cover',
+                    'w-full h-full object-cover transition-transform duration-300',
                     isScanning && hasCameraPermission ? 'block' : 'hidden'
-                )} 
+                )}
+                style={{ transform: `scale(${zoom})`}}
                 autoPlay 
                 muted 
                 playsInline 
@@ -157,24 +217,68 @@ export default function QrScanner() {
             {hasCameraPermission === false && (
                 <div className="w-full h-full flex items-center justify-center bg-black p-4">
                     <Alert variant="destructive" className="max-w-md">
-                        <AlertTitle>Camera Access Required</AlertTitle>
+                        <AlertTitle><Camera className="h-4 w-4 mr-2 inline-block"/>Camera Access Required</AlertTitle>
                         <AlertDescription>
                             Please allow camera access in your browser settings to use this feature.
                         </AlertDescription>
                     </Alert>
                 </div>
             )}
-
+            
             {isScanning && hasCameraPermission && (
+              <>
+                {/* Overlay and Scanning Box */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                    <div className="w-[70vmin] h-[70vmin] border-4 border-dashed border-primary/80 rounded-lg shadow-lg"/>
-                    <div className="absolute top-4 left-4 text-white bg-black/50 p-2 rounded-md">
-                        <p className="font-headline text-lg">QR Code Scanner</p>
-                        <p className="text-sm">Position a QR code within the frame.</p>
+                   <div className="w-[60vmin] h-[60vmin] relative overflow-hidden">
+                        {/* Box corners */}
+                        <div className="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-lg"></div>
+                        <div className="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white rounded-tr-lg"></div>
+                        <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white rounded-bl-lg"></div>
+                        <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white rounded-br-lg"></div>
+                        
+                        {/* Animated laser */}
+                        <div className="scanner-laser w-full"></div>
+                   </div>
+                </div>
+
+                {/* Top Toolbar */}
+                <div className="absolute top-0 left-0 right-0 flex justify-between p-4 bg-gradient-to-b from-black/50 to-transparent z-20">
+                    <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                        <SlidersHorizontal />
+                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                            <ImageIcon />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={toggleFlash} className="text-white hover:bg-white/20">
+                            {isFlashOn ? <Zap /> : <ZapOff />}
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={toggleCamera} className="text-white hover:bg-white/20">
+                            <RefreshCw />
+                        </Button>
                     </div>
                 </div>
+
+                 {/* Bottom Zoom Control */}
+                 <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/50 to-transparent z-20">
+                    <div className="flex items-center justify-center gap-2 max-w-xs mx-auto">
+                        <Search className="text-white/80" />
+                        <Slider
+                            defaultValue={[1]}
+                            value={[zoom]}
+                            min={1}
+                            max={4}
+                            step={0.1}
+                            onValueChange={handleZoomChange}
+                            className="w-full"
+                        />
+                        <Search className="text-white/80 h-6 w-6" />
+                    </div>
+                 </div>
+              </>
             )}
-            {!isScanning && renderResult()}
+
+            {renderResult()}
         </div>
     </div>
   );
