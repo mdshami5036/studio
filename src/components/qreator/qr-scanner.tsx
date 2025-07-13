@@ -5,7 +5,7 @@ import jsQR from 'jsqr';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { QrCode, Link as LinkIcon, Text, Loader2, Camera, Zap, ZapOff, RefreshCw, Image as ImageIcon, SlidersHorizontal, Search, FileSymlink, User, Mail, MessageSquare, MapPin, Phone, Calendar as CalendarIcon, Clipboard } from 'lucide-react';
+import { QrCode, Link as LinkIcon, Text, Loader2, Camera, Zap, ZapOff, RefreshCw, Image as ImageIcon, SlidersHorizontal, Search, FileSymlink, User, Mail, MessageSquare, MapPin, Phone, Calendar as CalendarIcon, Clipboard, CreditCard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Slider } from '../ui/slider';
@@ -282,6 +282,12 @@ export default function QrScanner() {
                           <DropdownMenuItem>
                             <FileSymlink className="mr-2 h-4 w-4" />
                             <span>AI Tour</span>
+                          </DropdownMenuItem>
+                        </Link>
+                         <Link href="/generate?tab=upi" passHref>
+                          <DropdownMenuItem>
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            <span>UPI</span>
                           </DropdownMenuItem>
                         </Link>
                       </DropdownMenuContent>

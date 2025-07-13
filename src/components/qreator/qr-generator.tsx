@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { QrCode, Link, Type, Bot, Palette, Image as ImageIcon, Sparkles, Loader2 } from 'lucide-react';
+import { QrCode, Link, Type, Bot, Palette, Image as ImageIcon, Sparkles, Loader2, CreditCard } from 'lucide-react';
 import QrPreview from './qr-preview';
 import { generateTourGuideMessage } from '@/ai/flows/generate-tour-guide-message';
 import { useToast } from '@/hooks/use-toast';
@@ -36,6 +36,8 @@ export default function QrGenerator() {
   const [tourDetails, setTourDetails] = useState(
     'This is a tour of the Eiffel Tower in Paris, France. It was designed and built by Gustave Eiffel for the 1889 World\'s Fair.'
   );
+  const [upiId, setUpiId] = useState('');
+  const [upiAmount, setUpiAmount] = useState('');
   
   const [origin, setOrigin] = useState('');
   useEffect(() => {
@@ -104,10 +106,21 @@ export default function QrGenerator() {
         return text;
       case 'tour':
         return `${origin}/tour?details=${encodeURIComponent(tourDetails)}`;
+      case 'upi': {
+        if (!upiId) return 'upi://pay';
+        const upiUrl = new URL('upi://pay');
+        upiUrl.searchParams.set('pa', upiId);
+        upiUrl.searchParams.set('pn', 'Payee'); // Payee name is often required
+        if (upiAmount) {
+            upiUrl.searchParams.set('am', upiAmount);
+        }
+        upiUrl.searchParams.set('cu', 'INR');
+        return upiUrl.toString();
+      }
       default:
         return '';
     }
-  }, [tab, url, text, tourDetails, origin]);
+  }, [tab, url, text, tourDetails, origin, upiId, upiAmount]);
 
   const qrOptions: QrOptions = {
     value: qrValue,
@@ -137,10 +150,11 @@ export default function QrGenerator() {
           </CardHeader>
           <CardContent>
             <Tabs value={tab} onValueChange={setTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="url"><Link className="mr-2 h-4 w-4"/>URL</TabsTrigger>
                 <TabsTrigger value="text"><Type className="mr-2 h-4 w-4"/>Text</TabsTrigger>
                 <TabsTrigger value="tour"><Bot className="mr-2 h-4 w-4"/>AI Tour</TabsTrigger>
+                <TabsTrigger value="upi"><CreditCard className="mr-2 h-4 w-4"/>UPI</TabsTrigger>
               </TabsList>
               <TabsContent value="url" className="mt-4">
                 <Label htmlFor="url-input" className="font-headline">Website URL</Label>
@@ -149,6 +163,16 @@ export default function QrGenerator() {
               <TabsContent value="text" className="mt-4">
                 <Label htmlFor="text-input" className="font-headline">Your Text</Label>
                 <Textarea id="text-input" placeholder="Enter any text" value={text} onChange={(e) => setText(e.target.value)} />
+              </TabsContent>
+               <TabsContent value="upi" className="mt-4 space-y-4">
+                <div>
+                  <Label htmlFor="upi-id" className="font-headline">UPI ID</Label>
+                  <Input id="upi-id" type="text" placeholder="yourname@bank" value={upiId} onChange={(e) => setUpiId(e.target.value)} />
+                </div>
+                <div>
+                  <Label htmlFor="upi-amount" className="font-headline">Amount (Optional)</Label>
+                  <Input id="upi-amount" type="number" placeholder="100.00" value={upiAmount} onChange={(e) => setUpiAmount(e.target.value)} />
+                </div>
               </TabsContent>
               <TabsContent value="tour" className="mt-4 space-y-4">
                 <div>
