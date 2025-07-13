@@ -3,10 +3,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import jsQR from 'jsqr';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { QrCode, Link as LinkIcon, Text, Loader2, Camera, Zap, ZapOff, RefreshCw, Image as ImageIcon, SlidersHorizontal, Search, FileSymlink, CreditCard, FileText } from 'lucide-react';
+import { QrCode, Link as LinkIcon, Text, Loader2, Camera, Zap, ZapOff, RefreshCw, Image as ImageIcon, SlidersHorizontal, Search, FileSymlink, CreditCard, FileText, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Slider } from '../ui/slider';
@@ -33,6 +33,7 @@ export default function QrScanner() {
     let track: MediaStreamTrack | null = null;
     
     const getCameraPermission = async () => {
+      if (!isScanning) return;
       try {
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
            throw new Error('Camera not available on this browser');
@@ -65,9 +66,7 @@ export default function QrScanner() {
       }
     };
 
-    if (isScanning) {
-      getCameraPermission();
-    }
+    getCameraPermission();
     
     const cleanup = () => {
       if (videoRef.current && videoRef.current.srcObject) {
@@ -211,28 +210,33 @@ export default function QrScanner() {
     if (!scanResult) return null;
 
     const isLink = isUrl(scanResult);
+    const isUPI = scanResult.startsWith('upi://');
 
     return (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50 p-4">
-            <Card className="w-full max-w-md">
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2"><QrCode className="text-primary"/>Scan Result</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                     <div className="flex items-start gap-3 bg-muted p-3 rounded-lg">
-                        {isLink ? <LinkIcon className="h-5 w-5 mt-1 flex-shrink-0" /> : <Text className="h-5 w-5 mt-1 flex-shrink-0" />}
-                        <p className="break-all font-mono text-sm">{scanResult}</p>
-                    </div>
-                    {isLink && (
-                        <Button asChild className="w-full">
-                            <a href={scanResult} target="_blank" rel="noopener noreferrer">
-                                Open Link
-                            </a>
-                        </Button>
-                    )}
-                     <Button variant="outline" onClick={handleRescan} className="w-full">Scan Again</Button>
-                </CardContent>
-            </Card>
+        <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50">
+            <div className="bg-background w-full h-full flex flex-col">
+              <header className="flex items-center justify-between p-4 border-b">
+                 <h2 className="text-lg font-semibold flex items-center gap-2"><QrCode className="text-primary"/>Scan Result</h2>
+                 <Button variant="ghost" size="icon" onClick={handleRescan}>
+                    <X />
+                 </Button>
+              </header>
+              <main className="flex-1 p-6 overflow-auto">
+                 <div className="bg-muted p-4 rounded-lg break-words font-mono text-sm">
+                    {scanResult}
+                 </div>
+              </main>
+              <footer className="p-4 border-t grid gap-2">
+                 {(isLink || isUPI) && (
+                    <Button asChild size="lg" className="w-full">
+                        <a href={scanResult} target="_blank" rel="noopener noreferrer">
+                            {isUPI ? 'Pay via UPI' : 'Open Link'}
+                        </a>
+                    </Button>
+                )}
+                 <Button variant="outline" size="lg" onClick={handleRescan} className="w-full">Scan Again</Button>
+              </footer>
+            </div>
         </div>
     );
   }
@@ -311,7 +315,7 @@ export default function QrScanner() {
                             <SlidersHorizontal />
                         </Button>
                       </SheetTrigger>
-                      <SheetContent side="bottom">
+                      <SheetContent side="bottom" className="rounded-t-lg">
                         <SheetHeader>
                           <SheetTitle>Create a QR Code</SheetTitle>
                           <SheetDescription>
