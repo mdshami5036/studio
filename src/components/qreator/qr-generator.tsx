@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { QrCode, Link, Type, Bot, Palette, Image as ImageIcon } from 'lucide-react';
+import { QrCode, Link, Type, Bot, Palette, Image as ImageIcon, Sparkles, Loader2 } from 'lucide-react';
 import QrPreview from './qr-preview';
+import { generateTourGuideMessage } from '@/ai/flows/generate-tour-guide-message';
+import { useToast } from '@/hooks/use-toast';
 
 type QrOptions = {
   value: string;
@@ -26,6 +28,7 @@ type QrOptions = {
 
 export default function QrGenerator() {
   const searchParams = useSearchParams();
+  const { toast } = useToast();
   const initialTab = searchParams.get('tab') || 'url';
   const [tab, setTab] = useState(initialTab);
   const [url, setUrl] = useState('https://firebase.google.com/');
@@ -43,6 +46,9 @@ export default function QrGenerator() {
   const [bgColor, setBgColor] = useState('#E0F8F8');
   const [logo, setLogo] = useState<string | undefined>(undefined);
   const [showLogo, setShowLogo] = useState(false);
+
+  const [aiPrompt, setAiPrompt] = useState('A tour of the Eiffel Tower');
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     // Cleanup for logo object URL
@@ -62,6 +68,31 @@ export default function QrGenerator() {
     if (file) {
       setLogo(URL.createObjectURL(file));
       setShowLogo(true);
+    }
+  };
+
+  const handleGenerateTourDetails = async () => {
+    if (!aiPrompt.trim()) {
+        toast({
+            title: 'Prompt is empty',
+            description: 'Please enter a topic for the AI to write about.',
+            variant: 'destructive',
+        });
+        return;
+    }
+    setIsGenerating(true);
+    try {
+        const result = await generateTourGuideMessage({ tourContext: aiPrompt });
+        setTourDetails(result.tourGuideMessage);
+    } catch (error) {
+        console.error('Failed to generate tour details:', error);
+        toast({
+            title: 'Generation Failed',
+            description: 'Could not generate tour details. Please try again.',
+            variant: 'destructive',
+        });
+    } finally {
+        setIsGenerating(false);
     }
   };
 
@@ -119,12 +150,25 @@ export default function QrGenerator() {
                 <Label htmlFor="text-input" className="font-headline">Your Text</Label>
                 <Textarea id="text-input" placeholder="Enter any text" value={text} onChange={(e) => setText(e.target.value)} />
               </TabsContent>
-              <TabsContent value="tour" className="mt-4">
-                <Label htmlFor="tour-input" className="font-headline">Tour Details</Label>
-                <Textarea id="tour-input" placeholder="Describe the tour location and points of interest..." value={tourDetails} onChange={(e) => setTourDetails(e.target.value)} className="min-h-[120px]" />
-                <p className="text-sm text-muted-foreground mt-2">
-                  This will generate a QR code linking to a page with an AI tour guide.
-                </p>
+              <TabsContent value="tour" className="mt-4 space-y-4">
+                <div>
+                    <Label htmlFor="ai-prompt" className="font-headline">AI Prompt</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                        <Input id="ai-prompt" placeholder="e.g., A tour of the Eiffel Tower" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} disabled={isGenerating}/>
+                        <Button onClick={handleGenerateTourDetails} disabled={isGenerating}>
+                            {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                            <span className="ml-2 hidden sm:inline">Generate</span>
+                        </Button>
+                    </div>
+                </div>
+
+                <div>
+                    <Label htmlFor="tour-input" className="font-headline">Tour Details</Label>
+                    <Textarea id="tour-input" placeholder="Describe the tour location and points of interest..." value={tourDetails} onChange={(e) => setTourDetails(e.target.value)} className="min-h-[120px] mt-1" />
+                    <p className="text-sm text-muted-foreground mt-2">
+                    This will generate a QR code linking to a page with an AI tour guide.
+                    </p>
+                </div>
               </TabsContent>
             </Tabs>
           </CardContent>
