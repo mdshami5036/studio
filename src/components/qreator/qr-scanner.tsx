@@ -5,18 +5,11 @@ import jsQR from 'jsqr';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { QrCode, Link as LinkIcon, Text, Loader2, Camera, Zap, ZapOff, RefreshCw, Image as ImageIcon, SlidersHorizontal, Search, FileSymlink, User, Mail, MessageSquare, MapPin, Phone, Calendar as CalendarIcon, Clipboard, CreditCard } from 'lucide-react';
+import { QrCode, Link as LinkIcon, Text, Loader2, Camera, Zap, ZapOff, RefreshCw, Image as ImageIcon, SlidersHorizontal, Search, FileSymlink, CreditCard, Clipboard } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Slider } from '../ui/slider';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import Link from 'next/link';
 
 
@@ -70,8 +63,10 @@ export default function QrScanner() {
       }
     };
 
-    getCameraPermission();
-
+    if (isScanning) {
+      getCameraPermission();
+    }
+    
     const cleanup = () => {
       if (videoRef.current && videoRef.current.srcObject) {
         const mediaStream = videoRef.current.srcObject as MediaStream;
@@ -80,7 +75,7 @@ export default function QrScanner() {
     };
 
     return cleanup;
-  }, [toast, facingMode]);
+  }, [toast, facingMode, isScanning]);
 
   useEffect(() => {
     let animationFrameId: number;
@@ -201,6 +196,15 @@ export default function QrScanner() {
     );
   }
 
+  const MenuLink = ({ href, icon: Icon, children }: { href: string; icon: React.ElementType; children: React.ReactNode }) => (
+    <Link href={href} passHref>
+      <Button variant="ghost" className="w-full justify-start text-base py-6">
+        <Icon className="mr-3 h-5 w-5 text-primary" />
+        {children}
+      </Button>
+    </Link>
+  );
+
   return (
     <div className="absolute inset-0 bg-black">
         {hasCameraPermission === null && (
@@ -253,45 +257,27 @@ export default function QrScanner() {
 
                 {/* Top Toolbar */}
                 <div className="absolute top-0 left-0 right-0 flex justify-between p-4 bg-gradient-to-b from-black/50 to-transparent z-20">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                    <Sheet>
+                      <SheetTrigger asChild>
                         <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
                             <SlidersHorizontal />
                         </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuLabel>Create QR</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                         <DropdownMenuItem onSelect={() => navigator.clipboard.readText().then(text => setScanResult(text ? `URL: ${text}`: ''))}>
-                            <Clipboard className="mr-2 h-4 w-4" />
-                            <span>Content from clipboard</span>
-                        </DropdownMenuItem>
-                        <Link href="/generate?tab=url" passHref>
-                          <DropdownMenuItem>
-                            <LinkIcon className="mr-2 h-4 w-4" />
-                            <span>URL</span>
-                          </DropdownMenuItem>
-                        </Link>
-                         <Link href="/generate?tab=text" passHref>
-                          <DropdownMenuItem>
-                            <Text className="mr-2 h-4 w-4" />
-                            <span>Text</span>
-                          </DropdownMenuItem>
-                        </Link>
-                        <Link href="/generate?tab=tour" passHref>
-                          <DropdownMenuItem>
-                            <FileSymlink className="mr-2 h-4 w-4" />
-                            <span>AI Tour</span>
-                          </DropdownMenuItem>
-                        </Link>
-                         <Link href="/generate?tab=upi" passHref>
-                          <DropdownMenuItem>
-                            <CreditCard className="mr-2 h-4 w-4" />
-                            <span>UPI</span>
-                          </DropdownMenuItem>
-                        </Link>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                      </SheetTrigger>
+                      <SheetContent side="bottom">
+                        <SheetHeader>
+                          <SheetTitle>Create a QR Code</SheetTitle>
+                          <SheetDescription>
+                            Select the type of content you want to embed in your QR code.
+                          </SheetDescription>
+                        </SheetHeader>
+                        <div className="grid gap-2 py-4">
+                          <MenuLink href="/generate?tab=url" icon={LinkIcon}>URL</MenuLink>
+                          <MenuLink href="/generate?tab=text" icon={Text}>Text</MenuLink>
+                          <MenuLink href="/generate?tab=tour" icon={FileSymlink}>AI Tour</MenuLink>
+                          <MenuLink href="/generate?tab=upi" icon={CreditCard}>UPI Payment</MenuLink>
+                        </div>
+                      </SheetContent>
+                    </Sheet>
 
                     <div className="flex items-center gap-2">
                         <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
