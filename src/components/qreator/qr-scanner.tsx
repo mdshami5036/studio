@@ -23,9 +23,9 @@ export default function QrScanner() {
            throw new Error('Camera not available on this browser');
         }
         const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-        setHasCameraPermission(true);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
+          setHasCameraPermission(true);
         }
       } catch (error) {
         console.error('Error accessing camera:', error);
@@ -146,26 +146,27 @@ export default function QrScanner() {
                 <p className="ml-2">Requesting camera access...</p>
             </div>
         )}
-        {hasCameraPermission === false && (
-             <Alert variant="destructive">
-              <AlertTitle>Camera Access Required</AlertTitle>
-              <AlertDescription>
-                Please allow camera access in your browser settings to use this feature.
-              </AlertDescription>
-            </Alert>
-        )}
-        {hasCameraPermission === true && (
-            <div className="relative aspect-video">
-                <video ref={videoRef} className={`w-full aspect-video rounded-md ${isScanning ? '' : 'hidden'}`} autoPlay muted playsInline />
-                <canvas ref={canvasRef} className="hidden"/>
-                {isScanning && (
-                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="w-3/4 h-3/4 border-4 border-dashed border-primary/50 rounded-lg"/>
-                     </div>
-                )}
-                {!isScanning && renderResult()}
-            </div>
-        )}
+        
+        <div className="relative aspect-video">
+            <video ref={videoRef} className={`w-full aspect-video rounded-md ${isScanning && hasCameraPermission ? '' : 'hidden'}`} autoPlay muted playsInline />
+            <canvas ref={canvasRef} className="hidden"/>
+
+            {hasCameraPermission === false && (
+                <Alert variant="destructive" className="absolute inset-0">
+                <AlertTitle>Camera Access Required</AlertTitle>
+                <AlertDescription>
+                    Please allow camera access in your browser settings to use this feature.
+                </AlertDescription>
+                </Alert>
+            )}
+
+            {isScanning && hasCameraPermission && (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-3/4 h-3/4 border-4 border-dashed border-primary/50 rounded-lg"/>
+                    </div>
+            )}
+            {!isScanning && renderResult()}
+        </div>
       </CardContent>
     </Card>
   );
