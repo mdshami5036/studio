@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-import { QrCode, Link, Type, Bot, Palette, Image as ImageIcon, Sparkles, Loader2, CreditCard } from 'lucide-react';
+import { QrCode, Link, Type, Bot, Palette, Image as ImageIcon, Sparkles, Loader2, CreditCard, FileText } from 'lucide-react';
 import QrPreview from './qr-preview';
 import { generateTourGuideMessage } from '@/ai/flows/generate-tour-guide-message';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +33,8 @@ export default function QrGenerator() {
   const [tab, setTab] = useState(initialTab);
   const [url, setUrl] = useState('https://firebase.google.com/');
   const [text, setText] = useState('Hello, world!');
+  const [imageUrl, setImageUrl] = useState('https://placehold.co/600x400.png');
+  const [pdfUrl, setPdfUrl] = useState('https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf');
   const [tourDetails, setTourDetails] = useState(
     'This is a tour of the Eiffel Tower in Paris, France. It was designed and built by Gustave Eiffel for the 1889 World\'s Fair.'
   );
@@ -104,6 +106,10 @@ export default function QrGenerator() {
         return url;
       case 'text':
         return text;
+      case 'image':
+        return imageUrl;
+      case 'pdf':
+        return pdfUrl;
       case 'tour':
         return `${origin}/tour?details=${encodeURIComponent(tourDetails)}`;
       case 'upi': {
@@ -120,7 +126,7 @@ export default function QrGenerator() {
       default:
         return '';
     }
-  }, [tab, url, text, tourDetails, origin, upiId, upiAmount]);
+  }, [tab, url, text, tourDetails, origin, upiId, upiAmount, imageUrl, pdfUrl]);
 
   const qrOptions: QrOptions = {
     value: qrValue,
@@ -150,9 +156,11 @@ export default function QrGenerator() {
           </CardHeader>
           <CardContent>
             <Tabs value={tab} onValueChange={setTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
                 <TabsTrigger value="url"><Link className="mr-2 h-4 w-4"/>URL</TabsTrigger>
                 <TabsTrigger value="text"><Type className="mr-2 h-4 w-4"/>Text</TabsTrigger>
+                <TabsTrigger value="image"><ImageIcon className="mr-2 h-4 w-4"/>Image</TabsTrigger>
+                <TabsTrigger value="pdf"><FileText className="mr-2 h-4 w-4"/>PDF</TabsTrigger>
                 <TabsTrigger value="tour"><Bot className="mr-2 h-4 w-4"/>AI Tour</TabsTrigger>
                 <TabsTrigger value="upi"><CreditCard className="mr-2 h-4 w-4"/>UPI</TabsTrigger>
               </TabsList>
@@ -163,6 +171,20 @@ export default function QrGenerator() {
               <TabsContent value="text" className="mt-4">
                 <Label htmlFor="text-input" className="font-headline">Your Text</Label>
                 <Textarea id="text-input" placeholder="Enter any text" value={text} onChange={(e) => setText(e.target.value)} />
+              </TabsContent>
+               <TabsContent value="image" className="mt-4">
+                <Label htmlFor="image-url-input" className="font-headline">Image URL</Label>
+                <Input id="image-url-input" type="url" placeholder="https://example.com/image.png" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+                 <p className="text-sm text-muted-foreground mt-2">
+                    Enter the URL of an online image to create a QR code.
+                  </p>
+              </TabsContent>
+               <TabsContent value="pdf" className="mt-4">
+                <Label htmlFor="pdf-url-input" className="font-headline">PDF URL</Label>
+                <Input id="pdf-url-input" type="url" placeholder="https://example.com/document.pdf" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} />
+                 <p className="text-sm text-muted-foreground mt-2">
+                    Enter the URL of an online PDF document to create a QR code.
+                  </p>
               </TabsContent>
                <TabsContent value="upi" className="mt-4 space-y-4">
                 <div>

@@ -5,7 +5,7 @@ import jsQR from 'jsqr';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { QrCode, Link as LinkIcon, Text, Loader2, Camera, Zap, ZapOff, RefreshCw, Image as ImageIcon, SlidersHorizontal, Search, FileSymlink, CreditCard, Clipboard } from 'lucide-react';
+import { QrCode, Link as LinkIcon, Text, Loader2, Camera, Zap, ZapOff, RefreshCw, Image as ImageIcon, SlidersHorizontal, Search, FileSymlink, CreditCard, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Slider } from '../ui/slider';
@@ -273,6 +273,8 @@ export default function QrScanner() {
                         <div className="grid gap-2 py-4">
                           <MenuLink href="/generate?tab=url" icon={LinkIcon}>URL</MenuLink>
                           <MenuLink href="/generate?tab=text" icon={Text}>Text</MenuLink>
+                          <MenuLink href="/generate?tab=image" icon={ImageIcon}>Image</MenuLink>
+                          <MenuLink href="/generate?tab=pdf" icon={FileText}>PDF</MenuLink>
                           <MenuLink href="/generate?tab=tour" icon={FileSymlink}>AI Tour</MenuLink>
                           <MenuLink href="/generate?tab=upi" icon={CreditCard}>UPI Payment</MenuLink>
                         </div>
