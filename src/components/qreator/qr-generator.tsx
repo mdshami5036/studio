@@ -178,22 +178,10 @@ export default function QrGenerator() {
                 <Textarea id="text-input" placeholder="Enter any text" value={text} onChange={(e) => setText(e.target.value)} />
               </TabsContent>
                <TabsContent value="image" className="mt-4 space-y-4">
-                <Alert>
-                  <AlertTitle>Image URL Required</AlertTitle>
-                  <AlertDescription>
-                    To create a QR code for an image, please upload it to an online service (like Imgur or Google Photos) and paste the public link below.
-                  </AlertDescription>
-                </Alert>
                 <Label htmlFor="image-url-input" className="font-headline">Image URL</Label>
                 <Input id="image-url-input" type="url" placeholder="https://example.com/image.png" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
               </TabsContent>
                <TabsContent value="pdf" className="mt-4 space-y-4">
-                <Alert>
-                  <AlertTitle>PDF URL Required</AlertTitle>
-                  <AlertDescription>
-                    To create a QR code for a PDF, please upload it to an online service (like Google Drive or Dropbox) and paste the public link below.
-                  </AlertDescription>
-                </Alert>
                 <Label htmlFor="pdf-url-input" className="font-headline">PDF URL</Label>
                 <Input id="pdf-url-input" type="url" placeholder="https://example.com/document.pdf" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} />
               </TabsContent>
