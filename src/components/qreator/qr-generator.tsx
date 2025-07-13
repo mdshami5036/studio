@@ -13,7 +13,7 @@ import { QrCode, Link, Type, Bot, Palette, Image as ImageIcon, Sparkles, Loader2
 import QrPreview from './qr-preview';
 import { generateTourGuideMessage } from '@/ai/flows/generate-tour-guide-message';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
+import { Separator } from '../ui/separator';
 
 type QrOptions = {
   value: string;
@@ -145,114 +145,124 @@ export default function QrGenerator() {
           }
         : undefined,
   };
+  
+  const TabTrigger = ({ value, icon, label }: { value: string; icon: React.ReactNode; label: string }) => (
+    <TabsTrigger value={value} className="flex-col h-auto gap-1.5 p-3 w-full">
+      {icon}
+      <span className="text-xs font-medium">{label}</span>
+    </TabsTrigger>
+  );
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
-      <div className="md:col-span-3 flex flex-col gap-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-headline">
-              <QrCode className="text-primary" /> Content Type
-            </CardTitle>
-            <CardDescription>Choose what your QR code will contain.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs value={tab} onValueChange={setTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6">
-                <TabsTrigger value="url"><Link className="mr-2 h-4 w-4"/>URL</TabsTrigger>
-                <TabsTrigger value="text"><Type className="mr-2 h-4 w-4"/>Text</TabsTrigger>
-                <TabsTrigger value="image"><ImageIcon className="mr-2 h-4 w-4"/>Image</TabsTrigger>
-                <TabsTrigger value="pdf"><FileText className="mr-2 h-4 w-4"/>PDF</TabsTrigger>
-                <TabsTrigger value="tour"><Bot className="mr-2 h-4 w-4"/>AI Tour</TabsTrigger>
-                <TabsTrigger value="upi"><CreditCard className="mr-2 h-4 w-4"/>UPI</TabsTrigger>
-              </TabsList>
-              <TabsContent value="url" className="mt-4">
-                <Label htmlFor="url-input" className="font-headline">Website URL</Label>
-                <Input id="url-input" type="url" placeholder="https://example.com" value={url} onChange={(e) => setUrl(e.target.value)} />
-                 <p className="text-sm text-muted-foreground mt-2">
-                    Enter any link for a website, image, document, or other online content.
-                  </p>
-              </TabsContent>
-              <TabsContent value="text" className="mt-4">
-                <Label htmlFor="text-input" className="font-headline">Your Text</Label>
-                <Textarea id="text-input" placeholder="Enter any text" value={text} onChange={(e) => setText(e.target.value)} />
-              </TabsContent>
-               <TabsContent value="image" className="mt-4 space-y-4">
-                <Label htmlFor="image-url-input" className="font-headline">Image URL</Label>
-                <Input id="image-url-input" type="url" placeholder="https://example.com/image.png" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
-              </TabsContent>
-               <TabsContent value="pdf" className="mt-4 space-y-4">
-                <Label htmlFor="pdf-url-input" className="font-headline">PDF URL</Label>
-                <Input id="pdf-url-input" type="url" placeholder="https://example.com/document.pdf" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} />
-              </TabsContent>
-               <TabsContent value="upi" className="mt-4 space-y-4">
-                <div>
-                  <Label htmlFor="upi-id" className="font-headline">UPI ID</Label>
-                  <Input id="upi-id" type="text" placeholder="yourname@bank" value={upiId} onChange={(e) => setUpiId(e.target.value)} />
-                </div>
-                <div>
-                  <Label htmlFor="upi-amount" className="font-headline">Amount (Optional)</Label>
-                  <Input id="upi-amount" type="number" placeholder="100.00" value={upiAmount} onChange={(e) => setUpiAmount(e.target.value)} />
-                </div>
-              </TabsContent>
-              <TabsContent value="tour" className="mt-4 space-y-4">
-                <div>
-                    <Label htmlFor="ai-prompt" className="font-headline">AI Prompt</Label>
-                    <div className="flex items-center gap-2 mt-1">
-                        <Input id="ai-prompt" placeholder="e.g., A tour of the Eiffel Tower" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} disabled={isGenerating}/>
-                        <Button onClick={handleGenerateTourDetails} disabled={isGenerating}>
-                            {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
-                            <span className="ml-2 hidden sm:inline">Generate</span>
-                        </Button>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <Card className="lg:col-span-2">
+         <Tabs value={tab} onValueChange={setTab} defaultValue="url" className="flex flex-col md:flex-row">
+            <div className="p-4 border-b md:border-b-0 md:border-r">
+                <h3 className="text-lg font-headline font-semibold mb-1 px-1">Content</h3>
+                <p className="text-sm text-muted-foreground mb-4 px-1">Choose your QR type.</p>
+                <TabsList className="flex flex-row md:flex-col h-auto bg-transparent p-0 w-full">
+                   <div className="grid grid-cols-3 md:grid-cols-2 gap-2 w-full">
+                     <TabTrigger value="url" icon={<Link className="w-5 h-5"/>} label="URL" />
+                     <TabTrigger value="text" icon={<Type className="w-5 h-5"/>} label="Text" />
+                     <TabTrigger value="image" icon={<ImageIcon className="w-5 h-5"/>} label="Image" />
+                     <TabTrigger value="pdf" icon={<FileText className="w-5 h-5"/>} label="PDF" />
+                     <TabTrigger value="tour" icon={<Bot className="w-5 h-5"/>} label="AI Tour" />
+                     <TabTrigger value="upi" icon={<CreditCard className="w-5 h-5"/>} label="UPI" />
+                   </div>
+                </TabsList>
+            </div>
+
+            <div className="p-6 flex-1">
+                 <TabsContent value="url" className="mt-0 space-y-4">
+                    <h3 className="text-xl font-headline font-semibold">Website URL</h3>
+                    <div className="space-y-2">
+                        <Label htmlFor="url-input">Link to any online content</Label>
+                        <Input id="url-input" type="url" placeholder="https://example.com" value={url} onChange={(e) => setUrl(e.target.value)} />
+                    </div>
+                </TabsContent>
+                <TabsContent value="text" className="mt-0 space-y-4">
+                    <h3 className="text-xl font-headline font-semibold">Plain Text</h3>
+                     <div className="space-y-2">
+                        <Label htmlFor="text-input">Enter any text to encode</Label>
+                        <Textarea id="text-input" placeholder="Hello, world!" value={text} onChange={(e) => setText(e.target.value)} />
+                    </div>
+                </TabsContent>
+                <TabsContent value="image" className="mt-0 space-y-4">
+                    <h3 className="text-xl font-headline font-semibold">Image QR Code</h3>
+                     <div className="space-y-2">
+                        <Label htmlFor="image-url-input">Image URL</Label>
+                        <Input id="image-url-input" type="url" placeholder="https://example.com/image.png" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+                    </div>
+                </TabsContent>
+                <TabsContent value="pdf" className="mt-0 space-y-4">
+                    <h3 className="text-xl font-headline font-semibold">PDF QR Code</h3>
+                     <div className="space-y-2">
+                        <Label htmlFor="pdf-url-input">PDF file URL</Label>
+                        <Input id="pdf-url-input" type="url" placeholder="https://example.com/document.pdf" value={pdfUrl} onChange={(e) => setPdfUrl(e.target.value)} />
+                    </div>
+                </TabsContent>
+                <TabsContent value="upi" className="mt-0 space-y-6">
+                    <h3 className="text-xl font-headline font-semibold">UPI Payment</h3>
+                    <div className="space-y-2">
+                        <Label htmlFor="upi-id">UPI ID</Label>
+                        <Input id="upi-id" type="text" placeholder="yourname@bank" value={upiId} onChange={(e) => setUpiId(e.target.value)} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="upi-amount">Amount (Optional)</Label>
+                        <Input id="upi-amount" type="number" placeholder="100.00" value={upiAmount} onChange={(e) => setUpiAmount(e.target.value)} />
+                    </div>
+                </TabsContent>
+                <TabsContent value="tour" className="mt-0 space-y-6">
+                    <h3 className="text-xl font-headline font-semibold">AI-Powered Tour Guide</h3>
+                    <div className="space-y-2">
+                        <Label htmlFor="ai-prompt">Topic</Label>
+                        <div className="flex items-center gap-2">
+                            <Input id="ai-prompt" placeholder="e.g., A tour of the Eiffel Tower" value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)} disabled={isGenerating}/>
+                            <Button onClick={handleGenerateTourDetails} disabled={isGenerating} size="icon" variant="outline">
+                                {isGenerating ? <Loader2 className="animate-spin" /> : <Sparkles />}
+                                <span className="sr-only">Generate</span>
+                            </Button>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="tour-input">Generated Tour Details</Label>
+                        <Textarea id="tour-input" placeholder="AI-generated content will appear here..." value={tourDetails} onChange={(e) => setTourDetails(e.target.value)} className="min-h-[150px]" />
+                        <p className="text-xs text-muted-foreground">
+                            This content will be shown on the tour page when the QR code is scanned.
+                        </p>
+                    </div>
+                </TabsContent>
+
+                <Separator className="my-8" />
+                
+                <div className="space-y-6">
+                    <h3 className="text-xl font-headline font-semibold">Customize Design</h3>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="fg-color">Foreground</Label>
+                        <Input id="fg-color" type="color" value={fgColor} onChange={(e) => setFgColor(e.target.value)} className="p-1 h-10 w-full" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="bg-color">Background</Label>
+                        <Input id="bg-color" type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="p-1 h-10 w-full"/>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="logo-upload" className="flex items-center gap-2">Logo</Label>
+                       <div className="flex items-center gap-2">
+                           <Input id="logo-upload" type="file" accept="image/png, image/jpeg, image/svg+xml" onChange={handleLogoUpload} className="flex-1 file:text-primary file:font-semibold" />
+                           {logo && <Button variant="outline" size="sm" onClick={() => setShowLogo(!showLogo)}>{showLogo ? 'Hide' : 'Show'}</Button>}
+                       </div>
                     </div>
                 </div>
 
-                <div>
-                    <Label htmlFor="tour-input" className="font-headline">Tour Details</Label>
-                    <Textarea id="tour-input" placeholder="Describe the tour location and points of interest..." value={tourDetails} onChange={(e) => setTourDetails(e.target.value)} className="min-h-[120px] mt-1" />
-                    <p className="text-sm text-muted-foreground mt-2">
-                    This will generate a QR code linking to a page with an AI tour guide.
-                    </p>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-headline">
-              <Palette className="text-primary" /> Customize Design
-            </CardTitle>
-            <CardDescription>Make your QR code stand out.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="flex items-center gap-4">
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="fg-color" className="font-headline">Foreground</Label>
-                <div className="relative">
-                    <Input id="fg-color" type="color" value={fgColor} onChange={(e) => setFgColor(e.target.value)} className="p-1 h-10 w-full" />
-                </div>
-              </div>
-              <div className="flex-1 space-y-2">
-                <Label htmlFor="bg-color" className="font-headline">Background</Label>
-                <Input id="bg-color" type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="p-1 h-10 w-full"/>
-              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="logo-upload" className="font-headline flex items-center gap-2"><ImageIcon className="h-4 w-4" /> Logo</Label>
-              <Input id="logo-upload" type="file" accept="image/png, image/jpeg, image/svg+xml" onChange={handleLogoUpload} className="file:text-primary file:font-semibold" />
-              {logo && <Button variant="outline" size="sm" onClick={() => setShowLogo(!showLogo)}>{showLogo ? 'Hide Logo' : 'Show Logo'}</Button>}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+         </Tabs>
+      </Card>
 
-      <div className="md:col-span-2">
+      <div className="lg:col-span-1">
         <QrPreview {...qrOptions} />
       </div>
     </div>
   );
 }
-
-    
