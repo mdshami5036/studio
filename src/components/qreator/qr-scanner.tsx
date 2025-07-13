@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -18,6 +19,7 @@ type FacingMode = 'user' | 'environment';
 export default function QrScanner() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [scanResult, setScanResult] = useState<string | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const [isScanning, setIsScanning] = useState(true);
@@ -157,6 +159,45 @@ export default function QrScanner() {
     setFacingMode(prev => prev === 'user' ? 'environment' : 'user');
   }
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = canvasRef.current;
+          if (canvas) {
+            const context = canvas.getContext('2d');
+            if (context) {
+              canvas.width = img.width;
+              canvas.height = img.height;
+              context.drawImage(img, 0, 0, img.width, img.height);
+              const imageData = context.getImageData(0, 0, img.width, img.height);
+              const code = jsQR(imageData.data, imageData.width, imageData.height);
+              if (code) {
+                setScanResult(code.data);
+                setIsScanning(false);
+              } else {
+                toast({
+                  variant: 'destructive',
+                  title: 'Scan Failed',
+                  description: 'No QR code found in the selected image.',
+                });
+              }
+            }
+          }
+        };
+        img.src = event.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
+  };
+
   const isUrl = (text: string) => {
     try {
       new URL(text);
@@ -227,6 +268,13 @@ export default function QrScanner() {
                 playsInline 
             />
             <canvas ref={canvasRef} className="hidden"/>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageUpload}
+              accept="image/*"
+              className="hidden"
+            />
 
             {hasCameraPermission === false && (
                 <div className="w-full h-full flex items-center justify-center bg-black p-4">
@@ -282,7 +330,7 @@ export default function QrScanner() {
                     </Sheet>
 
                     <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="text-white hover:bg-white/20">
+                        <Button variant="ghost" size="icon" onClick={triggerFileUpload} className="text-white hover:bg-white/20">
                             <ImageIcon />
                         </Button>
                         <Button variant="ghost" size="icon" onClick={toggleFlash} className="text-white hover:bg-white/20">
